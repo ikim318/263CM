@@ -36,7 +36,7 @@ def ode_model(t, x, q, a, b, x0):
     # equation to return the derivative of dependent variable with respect to time
 
     # TYPE IN YOUR TEMPERATURE ODE HERE
-    dxdt = a * q - b * (x - x0)
+    dxdt = -a * q - b * (x - x0)
 
     return dxdt
 
@@ -58,11 +58,9 @@ def load_data():
         Vector of x (units)
     """
     # Load kettle data
-    t_x, V, I, x = np.genfromtxt('263_Kettle_Experiment_22-07-19.csv', delimiter=',', skip_header=7).T
-    t_q = t_x
-    q = V * I
+    time, extraction_rate, pressure = np.genfromtxt('Dataset.csv', delimiter=',', skip_header=1).T
 
-    return t_q, q, t_x, x
+    return time, extraction_rate, pressure
 
 
 # This function solves your ODE using Improved Euler
@@ -98,7 +96,7 @@ def solve_ode(f, t0, t1, dt, xi, pars):
     """
 
     # set an arbitrary initial value of q for benchmark solution
-    q = -1.0
+    q = 1.0
 
     if pars is None:
         pars = []
@@ -252,7 +250,7 @@ def plot_suitable():
     [t, x_exact] = [load_data()[2], load_data()[3]]
 
     # TYPE IN YOUR PARAMETER ESTIMATE FOR a AND b HERE
-    a = 1 / (1000 * 4200 * (5 * (10 ** -4)))
+    a = 1
     b = a
     pars = [a, b]
 
@@ -286,7 +284,7 @@ def plot_improve():
     [t, x_exact] = [load_data()[2], load_data()[3]]
 
     # TYPE IN YOUR PARAMETER GUESS FOR a AND b HERE AS A START FOR OPTIMISATION
-    a = 1 / (1000 * 4200 * (5 * (10 ** -4)))
+    a = 1
     b = a
     pars_guess = [a, b]
 
@@ -338,13 +336,13 @@ def plot_benchmark():
     dt = 0.1
 
     # model values for benchmark analytic solution
-    a = 1
-    b = 1
+    a = 9.81/(12000000*0.2)
+    b = (10**-13*1000*12000000)/(8.9*10**-9*np.sqrt(12000000))*a
 
-    # set ambient value to zero for benchmark analytic solution
-    x0 = 0
+    # set ambient value for benchmark analytic solution
+    x0 = 1
     # set inital value to zero for benchmark analytic solution
-    xi = 0
+    xi = 54
 
     # setup parameters array with constants
     pars = [a, b, x0]
@@ -354,15 +352,15 @@ def plot_benchmark():
     # Solve ODE and plot
     t, x = solve_ode(ode_model, t0, t1, dt, xi, pars)
     plot[0].plot(t, x, "bx", label="Numerical Solution")
-    plot[0].set_ylabel("Temperature [C]")
-    plot[0].set_xlabel("t")
+    plot[0].set_ylabel("Pressure (Bar)")
+    plot[0].set_xlabel("P")
     plot[0].set_title("Benchmark")
 
     # Analytical Solution
     t = np.array(t)
 
     #   TYPE IN YOUR ANALYTIC SOLUTION HERE
-    x_analytical = - (a / b) * (1 - np.exp(-b * t)) + xi
+    x_analytical = ((a * q) / b) * (1 - np.exp(-b * t)) + xi
 
     plot[0].plot(t, x_analytical, "r-", label="Analytical Solution")
     plot[0].legend(loc=1)
