@@ -4,9 +4,8 @@ import math
 from matplotlib import pyplot as plt
 from matplotlib import cm
 from scipy.optimize import curve_fit
+from sklearn.linear_model import BayesianRidge
 
-
-# from sklearn.linear_model import BayesianRidge
 
 # This function defines your ODE.
 def ode_model(t, x, q, a, b, x0):
@@ -58,9 +57,9 @@ def load_data():
         Vector of x (units)
     """
     # Load kettle data
-    time, extraction_rate, pressure = np.genfromtxt('Dataset.csv', delimiter=',', skip_header=1).T
+    time, q, x = np.genfromtxt('Dataset.csv', delimiter=',', skip_header=1).T
 
-    return time, extraction_rate, pressure
+    return time, q, x
 
 
 # This function solves your ODE using Improved Euler
@@ -140,7 +139,7 @@ def x_curve_fitting(t, a, b):
     pars = [a, b]
 
     # ambient value of dependent variable
-    x0 = 22
+    x0 = 0
 
     # time vector information
     n = len(t)
@@ -250,9 +249,7 @@ def plot_suitable():
     [t, x_exact] = [load_data()[2], load_data()[3]]
 
     # TYPE IN YOUR PARAMETER ESTIMATE FOR a AND b HERE
-    a = 1
-    b = a
-    pars = [a, b]
+    pars = [1 / 2100, 1 / 2100]
 
     # solve ODE with estimated parameters and plot
     x = x_curve_fitting(t, *pars)
@@ -284,9 +281,7 @@ def plot_improve():
     [t, x_exact] = [load_data()[2], load_data()[3]]
 
     # TYPE IN YOUR PARAMETER GUESS FOR a AND b HERE AS A START FOR OPTIMISATION
-    a = 1
-    b = a
-    pars_guess = [a, b]
+    pars_guess = [1 / 2100, 1 / 2100]
 
     # call to find out optimal parameters using guess as start
     pars, pars_cov = x_pars(pars_guess)
@@ -336,13 +331,13 @@ def plot_benchmark():
     dt = 0.1
 
     # model values for benchmark analytic solution
-    a = 9.81/(12000000*0.2)
-    b = (10**-13*1000*12000000)/(8.9*10**-9*np.sqrt(12000000))*a
-
-    # set ambient value for benchmark analytic solution
-    x0 = 1
+    a = 1
+    b = 1
+    q = 1
+    # set ambient value to zero for benchmark analytic solution
+    x0 = 0
     # set inital value to zero for benchmark analytic solution
-    xi = 54
+    xi = 0
 
     # setup parameters array with constants
     pars = [a, b, x0]
@@ -353,14 +348,14 @@ def plot_benchmark():
     t, x = solve_ode(ode_model, t0, t1, dt, xi, pars)
     plot[0].plot(t, x, "bx", label="Numerical Solution")
     plot[0].set_ylabel("Pressure (Bar)")
-    plot[0].set_xlabel("P")
+    plot[0].set_xlabel("t")
     plot[0].set_title("Benchmark")
 
     # Analytical Solution
     t = np.array(t)
 
     #   TYPE IN YOUR ANALYTIC SOLUTION HERE
-    x_analytical = ((a * q) / b) * (1 - np.exp(-b * t)) + xi
+    x_analytical = -((a * q) / b) * (1 - np.e ** (-b * t)) + x0
 
     plot[0].plot(t, x_analytical, "r-", label="Analytical Solution")
     plot[0].legend(loc=1)
