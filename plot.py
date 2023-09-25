@@ -139,7 +139,7 @@ def x_curve_fitting(t, a, b, c):
     pars = [a, b, c]
 
     # ambient value of dependent variable
-    x0 = 0
+    x0 = 1
 
     # time vector information
     n = len(t)
@@ -388,7 +388,7 @@ def plot_benchmark():
         t, x = solve_ode(ode_model, t0, t1, i, x0, pars)
         plot[2].plot(1 / i, x[-1], "kx")
 
-    plot[2].set_ylabel(f"Temp(t = {10})")
+    plot[2].set_ylabel(f"Pressure(t = {10})")
     plot[2].set_xlabel("1/\u0394t")
     plot[2].set_title("Timestep Convergence")
 
