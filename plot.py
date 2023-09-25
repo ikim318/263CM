@@ -8,7 +8,7 @@ from sklearn.linear_model import BayesianRidge
 
 
 # This function defines your ODE.
-def ode_model(t, x, q, a, b, x0):
+def ode_model(t, x, q, dqdt, a, b, c, x0):
     """ Return the derivative dx/dt at time, t, for given parameters.
         Parameters:
         -----------
@@ -35,7 +35,7 @@ def ode_model(t, x, q, a, b, x0):
     # equation to return the derivative of dependent variable with respect to time
 
     # TYPE IN YOUR TEMPERATURE ODE HERE
-    dxdt = -a * q - b * (x - x0)
+    dxdt = -a * q - b * (x - x0) - c * dqdt
 
     return dxdt
 
@@ -94,9 +94,9 @@ def solve_ode(f, t0, t1, dt, xi, pars):
         4. all other parameters
     """
 
-    # set an arbitrary initial value of q for benchmark solution
+    # set an arbitrary initial value of q and dqdt for benchmark solution
     q = 1.0
-
+    dqdt = 0
     if pars is None:
         pars = []
 
@@ -111,8 +111,8 @@ def solve_ode(f, t0, t1, dt, xi, pars):
 
     # perform Improved Euler to calculate the independent and dependent variable solutions
     for i in range(n):
-        f0 = f(t[i], x[i], q, *pars)
-        f1 = f(t[i] + dt, x[i] + dt * f0, q, *pars)
+        f0 = f(t[i], x[i], q, dqdt, *pars)
+        f1 = f(t[i] + dt, x[i] + dt * f0, q, dqdt, *pars)
         x.append(x[i] + dt * (f0 / 2 + f1 / 2))
         t.append(t[i] + dt)
 
@@ -120,7 +120,7 @@ def solve_ode(f, t0, t1, dt, xi, pars):
 
 
 # This function defines your ODE as a numerical function suitable for calling 'curve_fit' in scipy.
-def x_curve_fitting(t, a, b):
+def x_curve_fitting(t, a, b, c):
     """ Function designed to be used with scipy.optimize.curve_fit which solves the ODE using the Improved Euler Method.
         Parameters:
         -----------
@@ -136,7 +136,7 @@ def x_curve_fitting(t, a, b):
             Dependent variable solution vector.
         """
     # model parameters
-    pars = [a, b]
+    pars = [a, b, c]
 
     # ambient value of dependent variable
     x0 = 0
@@ -146,7 +146,7 @@ def x_curve_fitting(t, a, b):
     dt = t[1] - t[0]
 
     # read in time and dependent variable information
-    [t, x_exact] = [load_data()[2], load_data()[3]]
+    [t, x_exact] = [load_data()[0], load_data()[2]]
 
     # initialise x
     x = [x_exact[0]]
@@ -156,11 +156,12 @@ def x_curve_fitting(t, a, b):
 
     # using interpolation to find the injection rate at each point in time
     q = np.interp(t, t_q, q)
+    dqdt = find_dqdt(q, t)
 
     # using the improved euler method to solve the ODE
     for i in range(n - 1):
-        f0 = ode_model(t[i], x[i], q[i], *pars, x0)
-        f1 = ode_model(t[i] + dt, x[i] + dt * f0, q[i], *pars, x0)
+        f0 = ode_model(t[i], x[i], q[i], dqdt[i], *pars, x0)
+        f1 = ode_model(t[i] + dt, x[i] + dt * f0, q[i], dqdt[i], *pars, x0)
         x.append(x[i] + dt * (f0 / 2 + f1 / 2))
 
     return x
@@ -179,7 +180,7 @@ def x_pars(pars_guess):
            Array consisting of a: mass injection strength parameter, b: recharge strength parameter
     """
     # read in time and dependent variable data
-    [t_exact, x_exact] = [load_data()[2], load_data()[3]]
+    [t_exact, x_exact] = [load_data()[0], load_data()[2]]
 
     # finding model constants in the formulation of the ODE using curve fitting
     # optimised parameters (pars) and covariance (pars_cov) between parameters
@@ -189,7 +190,7 @@ def x_pars(pars_guess):
 
 
 # This function solves your ODE using Improved Euler for a future prediction with new q
-def solve_ode_prediction(f, t0, t1, dt, xi, q, a, b, x0):
+def solve_ode_prediction(f, t0, t1, dt, xi, q, a, b, c, dqdt, x0):
     """ Solve the pressure prediction ODE model using the Improved Euler Method.
     Parameters:
     -----------
@@ -233,8 +234,8 @@ def solve_ode_prediction(f, t0, t1, dt, xi, q, a, b, x0):
 
     # using the improved euler method to solve the pressure ODE
     for i in range(n):
-        f0 = f(t[i], x[i], q, a, b, x0)
-        f1 = f(t[i] + dt, x[i] + dt * f0, q, a, b, x0)
+        f0 = f(t[i], x[i], q, dqdt, a, b, c, x0)
+        f1 = f(t[i] + dt, x[i] + dt * f0, q, dqdt, a, b, c, x0)
         x.append(x[i] + dt * (f0 / 2 + f1 / 2))
         t.append(t[i] + dt)
 
@@ -245,18 +246,21 @@ def solve_ode_prediction(f, t0, t1, dt, xi, q, a, b, x0):
 def plot_suitable():
     fig, (ax1, ax2) = plt.subplots(2, 1)
 
-    # read in time and temperature data
-    [t, x_exact] = [load_data()[2], load_data()[3]]
-
+    # read in time and pressure data
+    [t, q, x_exact] = [load_data()[0], load_data()[1], load_data()[2]]
+    dqdt = find_dqdt(q, t)
     # TYPE IN YOUR PARAMETER ESTIMATE FOR a AND b HERE
-    pars = [1 / 2100, 1 / 2100]
+    a = 9.81/(12000000*0.2)
+    b = (10**-13*1000*12000000)/(8.9*10**-9*np.sqrt(12000000))*a
+    c = 0.025
+    pars = [a, b, c]
 
     # solve ODE with estimated parameters and plot
     x = x_curve_fitting(t, *pars)
     ax1.plot(t, x_exact, 'k.', label='Observation')
     ax1.plot(t, x, 'r-', label='Curve Fitting Model')
-    ax1.set_ylabel('Temp (C)')
-    ax1.set_xlabel('Time (sec)')
+    ax1.set_ylabel('Pressure (Bar)')
+    ax1.set_xlabel('Time (Years)')
     ax1.legend()
 
     # compute the model misfit and plot
@@ -264,7 +268,7 @@ def plot_suitable():
     for i in range(len(x)):
         misfit[i] = x_exact[i] - x[i]
     ax2.plot(t, misfit, 'x', label='misfit', color='r')
-    ax2.set_ylabel('Temp misfit (C)')
+    ax2.set_ylabel('Pressure misfit (Bar)')
     ax2.set_xlabel('Time (sec)')
     plt.axhline(y=0, color='k', linestyle='-')
     ax2.legend()
@@ -278,24 +282,26 @@ def plot_improve():
     fig, (ax1, ax2) = plt.subplots(2, 1)
 
     # read in time and temperature data
-    [t, x_exact] = [load_data()[2], load_data()[3]]
-
+    [t, x_exact] = [load_data()[0], load_data()[2]]
     # TYPE IN YOUR PARAMETER GUESS FOR a AND b HERE AS A START FOR OPTIMISATION
-    pars_guess = [1 / 2100, 1 / 2100]
+    a = 9.81 / (12000000 * 0.2)
+    b = (10 ** -13 * 1000 * 12000000) / (8.9 * 10 ** -9 * np.sqrt(12000000)) * a
+    c = 0.025
+    pars_guess = [a,b,c]
 
     # call to find out optimal parameters using guess as start
     pars, pars_cov = x_pars(pars_guess)
 
     # check new optimised parameters
-    print("Improved a and b")
-    print(pars[0], pars[1])
+    print("Improved a,b,c")
+    print(pars[0], pars[1], pars[2])
 
     # solve ODE with new parameters and plot
     x = x_curve_fitting(t, *pars)
     ax1.plot(t, x_exact, 'k.', label='Observation')
     ax1.plot(t, x, 'r-', label='Curve Fitting Model')
-    ax1.set_ylabel('Temp (C)')
-    ax1.set_xlabel('Time (sec)')
+    ax1.set_ylabel('Pressure (Bar)')
+    ax1.set_xlabel('Time (Year)')
     ax1.legend()
 
     # compute the model misfit and plot
@@ -303,8 +309,8 @@ def plot_improve():
     for i in range(len(x)):
         misfit[i] = x_exact[i] - x[i]
     ax2.plot(t, misfit, 'x', label='misfit', color='r')
-    ax2.set_ylabel('Temp misfit (C)')
-    ax2.set_xlabel('Time (sec)')
+    ax2.set_ylabel('Pressure misfit (Bar)')
+    ax2.set_xlabel('Time (Year)')
     plt.axhline(y=0, color='k', linestyle='-')
     ax2.legend()
 
@@ -334,13 +340,15 @@ def plot_benchmark():
     a = 1
     b = 1
     q = 1
+    c = 1
+    dqdt = 0
     # set ambient value to zero for benchmark analytic solution
     x0 = 0
     # set inital value to zero for benchmark analytic solution
     xi = 0
 
     # setup parameters array with constants
-    pars = [a, b, x0]
+    pars = [a, b, c, x0]
 
     fig, plot = plt.subplots(nrows=1, ncols=3, figsize=(13, 5))
 
@@ -355,7 +363,7 @@ def plot_benchmark():
     t = np.array(t)
 
     #   TYPE IN YOUR ANALYTIC SOLUTION HERE
-    x_analytical = -((a * q) / b) * (1 - np.e ** (-b * t)) + x0
+    x_analytical = -((a * q) / b) * (1 - np.e ** (-b * t)) - c * dqdt
 
     plot[0].plot(t, x_analytical, "r-", label="Analytical Solution")
     plot[0].legend(loc=1)
@@ -388,3 +396,10 @@ def plot_benchmark():
     fig.tight_layout()
     plt.subplots_adjust(wspace=0.3)
     plt.show()
+
+
+def find_dqdt(q, t):
+    dqdt = np.zeros(len(q))
+    for i in range(len(q) - 1):
+        dqdt[i] = q[i + 1] - q[i]
+    return dqdt
