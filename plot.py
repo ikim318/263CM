@@ -120,7 +120,7 @@ def solve_ode(f, t0, t1, dt, xi, pars):
 
 
 # This function defines your ODE as a numerical function suitable for calling 'curve_fit' in scipy.
-def x_curve_fitting(t, a, b, c):
+def x_curve_fitting(t, a, b, c, x0):
     """ Function designed to be used with scipy.optimize.curve_fit which solves the ODE using the Improved Euler Method.
         Parameters:
         -----------
@@ -136,10 +136,10 @@ def x_curve_fitting(t, a, b, c):
             Dependent variable solution vector.
         """
     # model parameters
-    pars = [a, b, c]
+    pars = [a, b, c, x0]
 
     # ambient value of dependent variable
-    x0 = 1
+    # x0 = 1
 
     # time vector information
     n = len(t)
@@ -156,12 +156,12 @@ def x_curve_fitting(t, a, b, c):
 
     # using interpolation to find the injection rate at each point in time
     q = np.interp(t, t_q, q)
-    dqdt = find_dqdt(q, t)
+    dqdt = find_dqdt(q)
 
     # using the improved euler method to solve the ODE
     for i in range(n - 1):
-        f0 = ode_model(t[i], x[i], q[i], dqdt[i], *pars, x0)
-        f1 = ode_model(t[i] + dt, x[i] + dt * f0, q[i], dqdt[i], *pars, x0)
+        f0 = ode_model(t[i], x[i], q[i], dqdt[i], *pars)
+        f1 = ode_model(t[i] + dt, x[i] + dt * f0, q[i], dqdt[i], *pars)
         x.append(x[i] + dt * (f0 / 2 + f1 / 2))
 
     return x
@@ -248,12 +248,14 @@ def plot_suitable():
 
     # read in time and pressure data
     [t, q, x_exact] = [load_data()[0], load_data()[1], load_data()[2]]
-    dqdt = find_dqdt(q, t)
+    dqdt = find_dqdt(q)
     # TYPE IN YOUR PARAMETER ESTIMATE FOR a AND b HERE
-    a = 9.81/(12000000*0.2)
-    b = (10**-13*1000*12000000)/(8.9*10**-9*np.sqrt(12000000))*a
-    c = 0.025
-    pars = [a, b, c]
+    a = 9.81 / (500000 * 0.2)
+    b = (10 ** -13 * 1000 * 500000) / (8.9 * 10 ** -9 * np.sqrt(500000)) * a
+    c = 0.02
+    # Guess x0 is 100 if geothermal reservoir is 1km underground.
+    x0 = 100
+    pars = [a, b, c, x0]
 
     # solve ODE with estimated parameters and plot
     x = x_curve_fitting(t, *pars)
@@ -284,17 +286,19 @@ def plot_improve():
     # read in time and temperature data
     [t, x_exact] = [load_data()[0], load_data()[2]]
     # TYPE IN YOUR PARAMETER GUESS FOR a AND b HERE AS A START FOR OPTIMISATION
-    a = 9.81 / (12000000 * 0.2)
-    b = (10 ** -13 * 1000 * 12000000) / (8.9 * 10 ** -9 * np.sqrt(12000000)) * a
-    c = 0.025
-    pars_guess = [a,b,c]
+    a = 9.81 / (500000 * 0.2)
+    b = (10 ** -13 * 1000 * 500000) / (8.9 * 10 ** -9 * np.sqrt(500000)) * a
+    c = 0.02
+    # Guess x0 is 100 if geothermal reservoir is 1km underground.
+    x0 = 100
+    pars_guess = [a, b, c, x0]
 
     # call to find out optimal parameters using guess as start
     pars, pars_cov = x_pars(pars_guess)
 
     # check new optimised parameters
-    print("Improved a,b,c")
-    print(pars[0], pars[1], pars[2])
+    print("Improved a,b,c,x0")
+    print(pars[0], pars[1], pars[2], pars[3])
 
     # solve ODE with new parameters and plot
     x = x_curve_fitting(t, *pars)
@@ -363,7 +367,7 @@ def plot_benchmark():
     t = np.array(t)
 
     #   TYPE IN YOUR ANALYTIC SOLUTION HERE
-    x_analytical = -((a * q) / b) * (1 - np.e ** (-b * t)) - c * dqdt
+    x_analytical = -((a * q) / b) * (1 - np.e ** (-b * t)) - c * dqdt + x0
 
     plot[0].plot(t, x_analytical, "r-", label="Analytical Solution")
     plot[0].legend(loc=1)
@@ -398,7 +402,8 @@ def plot_benchmark():
     plt.show()
 
 
-def find_dqdt(q, t):
+def find_dqdt(q):
+    # Finds dqdt between two consecutive years (since dt is 1, don't need time data)
     dqdt = np.zeros(len(q))
     for i in range(len(q) - 1):
         dqdt[i] = q[i + 1] - q[i]
