@@ -1,10 +1,10 @@
-import warnings
+# import warnings
+# import math
+# from matplotlib import cm
+# from sklearn.linear_model import BayesianRidge
 import numpy as np
-import math
 from matplotlib import pyplot as plt
-from matplotlib import cm
 from scipy.optimize import curve_fit
-from sklearn.linear_model import BayesianRidge
 
 
 # This function defines your ODE.
@@ -35,9 +35,7 @@ def ode_model(t, x, q, dqdt, a, b, c, x0):
     # equation to return the derivative of dependent variable with respect to time
 
     # TYPE IN YOUR TEMPERATURE ODE HERE
-    dxdt = -a * q - b * (x - x0) - c * dqdt
-
-    return dxdt
+    return -a * q - b * (x - x0) - c * dqdt
 
 
 # This function loads in your data.
@@ -248,7 +246,7 @@ def plot_suitable():
 
     # read in time and pressure data
     [t, q, x_exact] = [load_data()[0], load_data()[1], load_data()[2]]
-    dqdt = find_dqdt(q)
+    # dqdt = find_dqdt(q)
     # TYPE IN YOUR PARAMETER ESTIMATE FOR a AND b HERE
     a = 9.81 / (500000 * 0.2)
     b = (10 ** -13 * 1000 * 500000) / (8.9 * 10 ** -9 * np.sqrt(500000)) * a
@@ -348,7 +346,7 @@ def plot_benchmark():
     dqdt = 0
     # set ambient value to zero for benchmark analytic solution
     x0 = 0
-    # set inital value to zero for benchmark analytic solution
+    # set initial value to zero for benchmark analytic solution
     xi = 0
 
     # setup parameters array with constants
