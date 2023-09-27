@@ -248,11 +248,11 @@ def plot_suitable():
     [t, q, x_exact] = [load_data()[0], load_data()[1], load_data()[2]]
     # dqdt = find_dqdt(q)
     # TYPE IN YOUR PARAMETER ESTIMATE FOR a AND b HERE
-    a = 9.81 / (500000 * 0.2)
-    b = (10 ** -13 * 1000 * 500000) / (8.9 * 10 ** -9 * np.sqrt(500000)) * a
-    c = 0.02
-    # Guess x0 is 100 if geothermal reservoir is 1km underground.
-    x0 = 100
+    a = 9.81 / (172225 * 0.2)
+    b = (10 ** -14 * 1000 * 172225) / (8.9 * 10 ** -8 * 415) * a
+    c = 0.01
+    # Guess x0 is 41.5 for average depth of reservoir
+    x0 = 41.5
     pars = [a, b, c, x0]
 
     # solve ODE with estimated parameters and plot
@@ -284,11 +284,11 @@ def plot_improve():
     # read in time and temperature data
     [t, x_exact] = [load_data()[0], load_data()[2]]
     # TYPE IN YOUR PARAMETER GUESS FOR a AND b HERE AS A START FOR OPTIMISATION
-    a = 9.81 / (500000 * 0.2)
-    b = (10 ** -13 * 1000 * 500000) / (8.9 * 10 ** -9 * np.sqrt(500000)) * a
-    c = 0.02
-    # Guess x0 is 100 if geothermal reservoir is 1km underground.
-    x0 = 100
+    a = 9.81 / (172225 * 0.2)
+    b = (10 ** -14 * 1000 * 172225) / (8.9 * 10 ** -8 * 415) * a
+    c = 0.01
+    # Guess x0 is 41.5 for average depth of reservoir
+    x0 = 50
     pars_guess = [a, b, c, x0]
 
     # call to find out optimal parameters using guess as start
