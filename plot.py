@@ -260,7 +260,7 @@ def plot_suitable():
     ax1.plot(t, x_exact, 'k.', label='Observation')
     ax1.plot(t, x, 'r-', label='Curve Fitting Model')
     ax1.set_ylabel('Pressure (Bar)')
-    ax1.set_xlabel('Time (Years)')
+    ax1.set_xlabel('Time (Year)')
     ax1.legend()
 
     # compute the model misfit and plot
@@ -269,7 +269,7 @@ def plot_suitable():
         misfit[i] = x_exact[i] - x[i]
     ax2.plot(t, misfit, 'x', label='misfit', color='r')
     ax2.set_ylabel('Pressure misfit (Bar)')
-    ax2.set_xlabel('Time (sec)')
+    ax2.set_xlabel('Time (Year)')
     plt.axhline(y=0, color='k', linestyle='-')
     ax2.legend()
 
