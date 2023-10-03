@@ -265,8 +265,11 @@ def plot_suitable():
 
     # compute the model misfit and plot
     misfit = x
+    sum = 0
     for i in range(len(x)):
         misfit[i] = x_exact[i] - x[i]
+        sum += (misfit[i])**2
+    print(f"Misfit is: {sum}")
     ax2.plot(t, misfit, 'x', label='misfit', color='r')
     ax2.set_ylabel('Pressure misfit (Bar)')
     ax2.set_xlabel('Time (Year)')
@@ -308,8 +311,11 @@ def plot_improve():
 
     # compute the model misfit and plot
     misfit = x
+    sum = 0
     for i in range(len(x)):
         misfit[i] = x_exact[i] - x[i]
+        sum += (misfit[i]) ** 2
+    print(f"Misfit is: {sum}")
     ax2.plot(t, misfit, 'x', label='misfit', color='r')
     ax2.set_ylabel('Pressure misfit (Bar)')
     ax2.set_xlabel('Time (Year)')

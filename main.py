@@ -3,7 +3,7 @@ from plot import *
 if __name__ == "__main__":
 
     # benchmarking for ODE
-    plot_benchmark()
+    #plot_benchmark()
 
     # ODE model with initial parameter values
     plot_suitable()
