@@ -1,10 +1,10 @@
-# import warnings
-# import math
-# from matplotlib import cm
-# from sklearn.linear_model import BayesianRidge
+import warnings
 import numpy as np
+import math
 from matplotlib import pyplot as plt
+from matplotlib import cm
 from scipy.optimize import curve_fit
+from sklearn.linear_model import BayesianRidge
 
 
 # This function defines your ODE.
@@ -413,7 +413,6 @@ def find_dqdt(q):
         dqdt[i] = q[i + 1] - q[i]
     return dqdt
 
-
 def plot_x_forecast():
     ''' Plot the ODE LPM model over the given data plot with different q-value scenario for predictions.
     Use a curve fitting function to accurately define the optimum parameter values.
@@ -434,6 +433,7 @@ def plot_x_forecast():
     c = 0.01
     x0 = 40
     pars_guess = [a,b,c,x0]
+
     # Optimise parameters for model fit
     pars, pars_cov = x_pars(pars_guess)
 
@@ -480,6 +480,26 @@ def plot_x_forecast():
     ax1.set_title('Pressure Forecast')
     ax1.set_ylabel('Pressure (Bar)')
     ax1.set_xlabel('Time (Years)')
+
+    # Solve ODE prediction for scenario 1
+    q1 = 300  # heat up again
+    x1 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q1, a, b, x0)[1]
+    ax1.plot(t1, x1, 'purple', label='Prediction when q = 300')
+
+    # Solve ODE prediction for scenario 2
+    q2 = 0  # keep q the same at zero
+    x2 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q2, a, b, x0)[1]
+    ax1.plot(t1, x2, 'green', label='Prediction when q = 0')
+
+    # Solve ODE prediction for scenario 3
+    q3 = -300  # extract at faster rate
+    x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, b, x0)[1]
+    ax1.plot(t1, x3, 'blue', label='Prediction when q = -300')
+
+    # Axis information
+    ax1.set_title('Temp Forecast')
+    ax1.set_ylabel('Temp (C)')
+    ax1.set_xlabel('Time (sec)')
     ax1.legend()
     plt.show()
 
@@ -490,20 +510,22 @@ def plot_x_uncertainty():
     This function plots the uncertainty of the ODE model.
     """
 
-    # read in time and dependent variable data
-    [t, x_exact] = [load_data()[0], load_data()[2]]
-
 #   Guess Parameters
     a = 9.81 / (160000 * 0.2)
     b = (10 ** -14 * 1000 * 160000) / (8.9 * 10 ** -8 * 400) * a
     c = 0.01
     x0 = 40
     pars_guess = [a, b, c, x0]
+    [t, x_exact] = [load_data()[2], load_data()[3]]
+
+
     # Optimise parameters for model fit
     pars, pars_cov = x_pars(pars_guess)
 
     # Store optimal values for later use
+
     [a, b, c, x0] = pars
+
 
     # Solve ODE and plot model
     x = x_curve_fitting(t, *pars)
@@ -539,9 +561,7 @@ def plot_x_uncertainty():
     x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, b, c, 0, x0)[1]
     ax1.plot(t1, x4, 'red', label='Prediction when q = 800 (Medium)')
 
-
-    # Estimate the variability of parameter b
-    var = 1e-3
+    var = 0.001
 
     # using Normal function to generate 500 random samples from a Gaussian distribution
     samples = np.random.normal(b, var, 500)
@@ -554,7 +574,6 @@ def plot_x_uncertainty():
         # frequency distribution for histograms for parameters
         b_list.append(samples[i])
 
-        # Solve model fit with uncertainty
         spars = [a, samples[i],c,x0]
         x = x_curve_fitting(t, *spars)
         ax1.plot(t, x, 'black', alpha=0.1, lw=0.5)
@@ -577,6 +596,7 @@ def plot_x_uncertainty():
         q4 = 800
         x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, b, c, 0, x0)[1]
         ax1.plot(t1, x4, 'red')
+
 
     ax1.set_title('Temp Uncertainty Forecast')
     ax1.set_ylabel('Temp (C)')
