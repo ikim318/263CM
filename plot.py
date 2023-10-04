@@ -1,10 +1,10 @@
-# import warnings
-# import math
-# from matplotlib import cm
-# from sklearn.linear_model import BayesianRidge
+import warnings
 import numpy as np
+import math
 from matplotlib import pyplot as plt
+from matplotlib import cm
 from scipy.optimize import curve_fit
+from sklearn.linear_model import BayesianRidge
 
 
 # This function defines your ODE.
@@ -412,3 +412,175 @@ def find_dqdt(q):
     for i in range(len(q) - 1):
         dqdt[i] = q[i + 1] - q[i]
     return dqdt
+
+def plot_x_forecast():
+    ''' Plot the ODE LPM model over the given data plot with different q-value scenario for predictions.
+    Use a curve fitting function to accurately define the optimum parameter values.
+    Parameters:
+    -----------
+    none
+    Returns:
+    --------
+    none
+    '''
+
+    # Read in time and dependent variable data
+    [t, x_exact] = [load_data()[2], load_data()[3]]
+
+    # GUESS PARAMETERS HERE
+    pars_guess = [4.8e-4, 0.5e-3]
+
+    # Optimise parameters for model fit
+    pars, pars_cov = x_pars(pars_guess)
+
+    # Store optimal values for later use
+    [a, b] = pars
+
+    # Solve ODE and plot model
+    x = x_curve_fitting(t, *pars)
+    f, ax1 = plt.subplots()
+    ax1.plot(t, x_exact, 'r.', label='data')
+    ax1.plot(t, x, 'black', label='Model')
+
+    # Remember the last time
+    t_end = t[-1]
+
+    # Create forecast time with 200 new time steps
+    t1 = []
+    for i in range(200):
+        t1.append(i + t_end)
+
+    # Set initial and ambient values for forecast
+    xi = x[-1]  # Initial value of x is final value of model fit
+    x0 = 22  # Ambient value of x
+
+    # Solve ODE prediction for scenario 1
+    q1 = 300  # heat up again
+    x1 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q1, a, b, x0)[1]
+    ax1.plot(t1, x1, 'purple', label='Prediction when q = 300')
+
+    # Solve ODE prediction for scenario 2
+    q2 = 0  # keep q the same at zero
+    x2 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q2, a, b, x0)[1]
+    ax1.plot(t1, x2, 'green', label='Prediction when q = 0')
+
+    # Solve ODE prediction for scenario 3
+    q3 = -300  # extract at faster rate
+    x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, b, x0)[1]
+    ax1.plot(t1, x3, 'blue', label='Prediction when q = -300')
+
+    # Axis information
+    ax1.set_title('Temp Forecast')
+    ax1.set_ylabel('Temp (C)')
+    ax1.set_xlabel('Time (sec)')
+    ax1.legend()
+    plt.show()
+
+
+# This function computes uncertainty in your model
+def plot_x_uncertainty():
+    """
+    This function plots the uncertainty of the ODE model.
+    """
+
+    # read in time and dependent variable data
+    [t, x_exact] = [load_data()[2], load_data()[3]]
+
+    # GUESS PARAMETERS HERE
+    pars_guess = [4.8e-4, 0.5e-3]
+
+    # Optimise parameters for model fit
+    pars, pars_cov = x_pars(pars_guess)
+
+    # Store optimal values for later use
+    [a, b] = pars
+
+    # Solve ODE and plot model
+    x = x_curve_fitting(t, *pars)
+    figa, ax1 = plt.subplots()
+    ax1.plot(t, x_exact, 'r.', label='data')
+    ax1.plot(t, x, 'black', label='Model')
+
+    # Remember the last time
+    t_end = t[-1]
+
+    # Create forecast time with 400 new time steps
+    t1 = []
+    for i in range(400):
+        t1.append(i + t_end)
+
+    # Set initial and ambient values for forecast
+    xi = x[-1]  # Initial value of x is final value of model fit
+    x0 = 22  # Ambient value of x
+
+    # Solve ODE prediction for scenario 1
+    q1 = 300  # heat up again
+    x1 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q1, a, b, x0)[1]
+    ax1.plot(t1, x1, 'purple')
+
+    # Solve ODE prediction for scenario 2
+    q2 = 0  # keep q the same at zero
+    x2 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q2, a, b, x0)[1]
+    ax1.plot(t1, x2, 'green')
+
+    # Solve ODE prediction for scenario 3
+    q3 = -300  # extract at faster rate
+    x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, b, x0)[1]
+    ax1.plot(t1, x3, 'blue')
+
+    # Estimate the variability of parameter b
+    # We are assuming that parameter b has the biggest source of error in the
+    # system (you could choose another parameter if you like)
+    var = 1e-4
+
+    # using Normal function to generate 500 random samples from a Gaussian distribution
+    samples = np.random.normal(b, var, 500)
+
+    # initialise list to count parameters for histograms
+    b_list = []
+
+    # loop to plot the different predictions with uncertainty
+    for i in range(0, 499):  # 500 samples are 0 to 499
+        # frequency distribution for histograms for parameters
+        b_list.append(samples[i])
+
+        # Solve model fit with uncertainty
+        spars = [a, samples[i]]
+        x = x_curve_fitting(t, *spars)
+        ax1.plot(t, x, 'black', alpha=0.1, lw=0.5)
+
+        # Solve ODE prediction for scenario 1 with uncertainty
+        q1 = 300  # heat up again
+        x1 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q1, a, samples[i], x0)[1]
+        ax1.plot(t1, x1, 'purple', alpha=0.1, lw=0.5)
+
+        # Solve ODE prediction for scenario 2 with uncertainty
+        q2 = 0  # keep q the same at zero
+        x2 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q2, a, samples[i], x0)[1]
+        ax1.plot(t1, x2, 'green', alpha=0.1, lw=0.5)
+
+        # Solve ODE prediction for scenario 3 with uncertainty
+        q3 = -300  # extract at faster rate
+        x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, samples[i], x0)[1]
+        ax1.plot(t1, x3, 'blue', alpha=0.1, lw=0.5)
+
+    ax1.set_title('Temp Uncertainty Forecast')
+    ax1.set_ylabel('Temp (C)')
+    ax1.set_xlabel('Time (sec)')
+    ax1.legend()
+
+    # plotting the histograms
+    figb, (ax2) = plt.subplots(1, 1)
+    num_bins = 30
+    ax2.hist(b_list, num_bins)
+    ax2.set_title("Frequency Density plot for Parameter b", fontsize=9)
+    ax2.set_xlabel('Parameter b', fontsize=9)
+    ax2.set_ylabel('Frequency density', fontsize=9)
+    a_yf5, a_yf95 = np.percentile(b_list, [5, 95])
+    ax2.axvline(a_yf5, label='95% interval', color='r', linestyle='--')
+    ax2.axvline(a_yf95, color='r', linestyle='--')
+    ax2.legend(loc=0, fontsize=9)
+
+    plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+    plt.show()
+
