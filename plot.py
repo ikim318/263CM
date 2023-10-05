@@ -136,24 +136,17 @@ def x_curve_fitting(t, a, b, c, x0):
     # model parameters
     pars = [a, b, c, x0]
 
-    # ambient value of dependent variable
-    # x0 = 1
-
     # time vector information
     n = len(t)
     dt = t[1] - t[0]
 
     # read in time and dependent variable information
-    [t, x_exact] = [load_data()[0], load_data()[2]]
+    [t, q, x_exact] = load_data()[0],load_data()[1],load_data()[2]
 
     # initialise x
     x = [x_exact[0]]
 
-    # read in q data
-    [t_q, q] = [load_data()[0], load_data()[1]]
-
     # using interpolation to find the injection rate at each point in time
-    q = np.interp(t, t_q, q)
     dqdt = find_dqdt(q)
 
     # using the improved euler method to solve the ODE
@@ -245,8 +238,7 @@ def plot_suitable():
     fig, (ax1, ax2) = plt.subplots(2, 1)
 
     # read in time and pressure data
-    [t, q, x_exact] = [load_data()[0], load_data()[1], load_data()[2]]
-    # dqdt = find_dqdt(q)
+    [t,x_exact] = load_data()[0], load_data()[2]
     # TYPE IN YOUR PARAMETER ESTIMATE FOR a AND b HERE
     a = 9.81 / (160000 * 0.2)
     b = (10 ** -14 * 1000 * 160000) / (8.9 * 10 ** -8 * 400) * a
@@ -346,7 +338,7 @@ def plot_benchmark():
 
     # model values for benchmark analytic solution
     a = 1
-    b = 10
+    b = 1
     q = 1
     c = 1
     dqdt = 0
@@ -413,6 +405,7 @@ def find_dqdt(q):
         dqdt[i] = q[i + 1] - q[i]
     return dqdt
 
+
 def plot_x_forecast():
     ''' Plot the ODE LPM model over the given data plot with different q-value scenario for predictions.
     Use a curve fitting function to accurately define the optimum parameter values.
@@ -432,7 +425,7 @@ def plot_x_forecast():
     b = (10 ** -14 * 1000 * 160000) / (8.9 * 10 ** -8 * 400) * a
     c = 0.01
     x0 = 40
-    pars_guess = [a,b,c,x0]
+    pars_guess = [a, b, c, x0]
 
     # Optimise parameters for model fit
     pars, pars_cov = x_pars(pars_guess)
@@ -451,7 +444,7 @@ def plot_x_forecast():
 
     # Create forecast time with 200 new time steps
     t1 = []
-    for i in range(50):
+    for i in range(22):
         t1.append(i + t_end)
 
     # Set initial and ambient values for forecast
@@ -469,7 +462,7 @@ def plot_x_forecast():
 
     # Solve ODE prediction for scenario 3
     q3 = 1250  # extract at faster rate
-    x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, b,c,0, x0)[1]
+    x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, b, c, 0, x0)[1]
     ax1.plot(t1, x3, 'blue', label='Prediction when q = 1250 (Geothermal Company)')
 
     q4 = 800
@@ -481,25 +474,6 @@ def plot_x_forecast():
     ax1.set_ylabel('Pressure (Bar)')
     ax1.set_xlabel('Time (Years)')
 
-    # Solve ODE prediction for scenario 1
-    q1 = 300  # heat up again
-    x1 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q1, a, b, x0)[1]
-    ax1.plot(t1, x1, 'purple', label='Prediction when q = 300')
-
-    # Solve ODE prediction for scenario 2
-    q2 = 0  # keep q the same at zero
-    x2 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q2, a, b, x0)[1]
-    ax1.plot(t1, x2, 'green', label='Prediction when q = 0')
-
-    # Solve ODE prediction for scenario 3
-    q3 = -300  # extract at faster rate
-    x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, b, x0)[1]
-    ax1.plot(t1, x3, 'blue', label='Prediction when q = -300')
-
-    # Axis information
-    ax1.set_title('Temp Forecast')
-    ax1.set_ylabel('Temp (C)')
-    ax1.set_xlabel('Time (sec)')
     ax1.legend()
     plt.show()
 
@@ -510,14 +484,13 @@ def plot_x_uncertainty():
     This function plots the uncertainty of the ODE model.
     """
 
-#   Guess Parameters
+    #   Guess Parameters
     a = 9.81 / (160000 * 0.2)
     b = (10 ** -14 * 1000 * 160000) / (8.9 * 10 ** -8 * 400) * a
     c = 0.01
     x0 = 40
     pars_guess = [a, b, c, x0]
-    [t, x_exact] = [load_data()[2], load_data()[3]]
-
+    [t, x_exact] = [load_data()[0], load_data()[2]]
 
     # Optimise parameters for model fit
     pars, pars_cov = x_pars(pars_guess)
@@ -525,7 +498,6 @@ def plot_x_uncertainty():
     # Store optimal values for later use
 
     [a, b, c, x0] = pars
-
 
     # Solve ODE and plot model
     x = x_curve_fitting(t, *pars)
@@ -574,7 +546,7 @@ def plot_x_uncertainty():
         # frequency distribution for histograms for parameters
         b_list.append(samples[i])
 
-        spars = [a, samples[i],c,x0]
+        spars = [a, samples[i], c, x0]
         x = x_curve_fitting(t, *spars)
         ax1.plot(t, x, 'black', alpha=0.1, lw=0.5)
 
@@ -597,8 +569,7 @@ def plot_x_uncertainty():
         x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, b, c, 0, x0)[1]
         ax1.plot(t1, x4, 'red')
 
-
-    ax1.set_title('Temp Uncertainty Forecast')
+    ax1.set_title('Pressure')
     ax1.set_ylabel('Temp (C)')
     ax1.set_xlabel('Time (sec)')
     ax1.legend()
