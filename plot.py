@@ -552,21 +552,21 @@ def plot_x_uncertainty():
 
         # Solve ODE prediction for scenario 1
         q1 = 700  # heat up again
-        x1 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q1, a, b, c, 0, x0)[1]
+        x1 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q1, a, samples[i], c, 0, x0)[1]
         ax1.plot(t1, x1, 'purple')
 
         # Solve ODE prediction for scenario 2
         q2 = 900  # keep q the same
-        x2 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q2, a, b, c, 0, x0)[1]
+        x2 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q2, a, samples[i], c, 0, x0)[1]
         ax1.plot(t1, x2, 'green')
 
         # Solve ODE prediction for scenario 3
         q3 = 1250  # extract at faster rate
-        x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, b, c, 0, x0)[1]
+        x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, samples[i], c, 0, x0)[1]
         ax1.plot(t1, x3, 'blue')
 
         q4 = 800
-        x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, b, c, 0, x0)[1]
+        x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, samples[i], c, 0, x0)[1]
         ax1.plot(t1, x4, 'red')
 
     ax1.set_title('Pressure')
