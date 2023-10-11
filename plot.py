@@ -240,8 +240,8 @@ def plot_suitable():
     # read in time and pressure data
     [t,x_exact] = load_data()[0], load_data()[2]
     # TYPE IN YOUR PARAMETER ESTIMATE FOR a AND b HERE
-    a = 9.81 / (160000 * 0.2)
-    b = (10 ** -14 * 1000 * 160000) / (8.9 * 10 ** -8 * 400) * a
+    a = 9.81 / (400000 * 0.2)
+    b = (10 ** -14 * 1000 * 400000) / (8.9 * 10 ** -8 * 400) * a
     c = 0.01
     # Guess x0 is 40 for average depth of reservoir
     x0 = 40
@@ -279,8 +279,8 @@ def plot_improve():
     # read in time and temperature data
     [t, x_exact] = [load_data()[0], load_data()[2]]
     # TYPE IN YOUR PARAMETER GUESS FOR a AND b HERE AS A START FOR OPTIMISATION
-    a = 9.81 / (160000 * 0.2)
-    b = (10 ** -14 * 1000 * 160000) / (8.9 * 10 ** -8 * 400) * a
+    a = 9.81 / (16000000 * 0.2)
+    b = (10 ** -14 * 1000 * 16000000) / (8.9 * 10 ** -8 * 400) * a
     c = 0.01
     # Guess x0 is 40 for average depth of reservoir
     x0 = 40
@@ -421,8 +421,8 @@ def plot_x_forecast():
     [t, x_exact] = [load_data()[0], load_data()[2]]
     # dqdt = find_dqdt()
     # GUESS PARAMETERS HERE
-    a = 9.81 / (160000 * 0.2)
-    b = (10 ** -14 * 1000 * 160000) / (8.9 * 10 ** -8 * 400) * a
+    a = 9.81 / (15000000 * 0.2)
+    b = (10 ** -14 * 1000 * 15000000) / (8.9 * 10 ** -8 * 400) * a
     c = 0.01
     x0 = 40
     pars_guess = [a, b, c, x0]
@@ -510,7 +510,7 @@ def plot_x_uncertainty():
 
     # Create forecast time with 400 new time steps
     t1 = []
-    for i in range(400):
+    for i in range(30):
         t1.append(i + t_end)
 
     # Set initial and ambient values for forecast
@@ -570,8 +570,8 @@ def plot_x_uncertainty():
         ax1.plot(t1, x4, 'red')
 
     ax1.set_title('Pressure')
-    ax1.set_ylabel('Temp (C)')
-    ax1.set_xlabel('Time (sec)')
+    ax1.set_ylabel('Pressure (Bar)')
+    ax1.set_xlabel('Time Years')
     ax1.legend()
 
     # plotting the histograms
