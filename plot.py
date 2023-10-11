@@ -533,7 +533,7 @@ def plot_x_uncertainty():
     x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, b, c, 0, x0)[1]
     ax1.plot(t1, x4, 'red', label='Prediction when q = 800 (Medium)')
 
-    var = 0.001
+    var = 0.000961
 
     # using Normal function to generate 500 random samples from a Gaussian distribution
     samples = np.random.normal(b, var, 500)
