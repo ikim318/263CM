@@ -421,8 +421,8 @@ def plot_x_forecast():
     [t, x_exact] = [load_data()[0], load_data()[2]]
     # dqdt = find_dqdt()
     # GUESS PARAMETERS HERE
-    a = 9.81 / (15000000 * 0.2)
-    b = (10 ** -14 * 1000 * 15000000) / (8.9 * 10 ** -8 * 400) * a
+    a = 9.81 / (16000000 * 0.2)
+    b = (10 ** -14 * 1000 * 16000000) / (8.9 * 10 ** -8 * 400) * a
     c = 0.01
     x0 = 40
     pars_guess = [a, b, c, x0]
@@ -515,25 +515,30 @@ def plot_x_uncertainty():
 
     # Set initial and ambient values for forecast
     xi = x[-1]  # Initial value of x is final value of model fit
+
+    # Solve ODE prediction for scenario 1 (Iwi)
     q1 = 700  # heat up again
     x1 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q1, a, b, c, 0, x0)[1]
     ax1.plot(t1, x1, 'purple', label='Prediction when q = 700 (Iwi)')
 
-    # Solve ODE prediction for scenario 2
+    # Solve ODE prediction for scenario 2 (Homeowners)
     q2 = 900  # keep q the same
     x2 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q2, a, b, c, 0, x0)[1]
     ax1.plot(t1, x2, 'green', label='Prediction when q = 900 (Homeowners)')
 
-    # Solve ODE prediction for scenario 3
+    # Solve ODE prediction for scenario 3 (Geothermal Company)
     q3 = 1250  # extract at faster rate
     x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, b, c, 0, x0)[1]
     ax1.plot(t1, x3, 'blue', label='Prediction when q = 1250 (Geothermal Company)')
 
+    # Solve ODE prediction for scenario 4 (Medium)
     q4 = 800
     x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, b, c, 0, x0)[1]
     ax1.plot(t1, x4, 'red', label='Prediction when q = 800 (Medium)')
 
-    var = 0.000961
+    # Variance
+    # var = 0.000961
+    var = calculate_variance()
 
     # using Normal function to generate 500 random samples from a Gaussian distribution
     samples = np.random.normal(b, var, 500)
@@ -553,21 +558,21 @@ def plot_x_uncertainty():
         # Solve ODE prediction for scenario 1
         q1 = 700  # heat up again
         x1 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q1, a, samples[i], c, 0, x0)[1]
-        ax1.plot(t1, x1, 'purple')
+        ax1.plot(t1, x1, 'purple', alpha=0.1, lw=0.5)
 
         # Solve ODE prediction for scenario 2
         q2 = 900  # keep q the same
         x2 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q2, a, samples[i], c, 0, x0)[1]
-        ax1.plot(t1, x2, 'green')
+        ax1.plot(t1, x2, 'green', alpha=0.1, lw=0.5)
 
         # Solve ODE prediction for scenario 3
         q3 = 1250  # extract at faster rate
         x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, samples[i], c, 0, x0)[1]
-        ax1.plot(t1, x3, 'blue')
+        ax1.plot(t1, x3, 'blue', alpha=0.1, lw=0.5)
 
         q4 = 800
         x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, samples[i], c, 0, x0)[1]
-        ax1.plot(t1, x4, 'red')
+        ax1.plot(t1, x4, 'red', alpha=0.1, lw=0.5)
 
     ax1.set_title('Pressure')
     ax1.set_ylabel('Pressure (Bar)')
@@ -588,3 +593,22 @@ def plot_x_uncertainty():
 
     plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
     plt.show()
+
+def calculate_variance():
+    data_points = np.random.uniform(0.1, 0.3, 100)
+
+    # Step 1: Calculate the mean of the data points
+    mean_value = sum(data_points) / len(data_points)
+
+    # Step 2: Calculate the squared differences between each data point and the mean
+    squared_diff = [(x - mean_value) ** 2 for x in data_points]
+
+    # Step 3: Compute the sum of these squared differences
+    sum_squared_diff = sum(squared_diff)
+
+    # Step 4: Divide the sum by the total number of data points to get the variance
+    variance = sum_squared_diff / len(data_points)
+
+    print(f"The variance of the dataset is: {variance}")
+    return variance
+
