@@ -522,7 +522,7 @@ def plot_x_uncertainty():
     # Solve ODE prediction for scenario 2
     q2 = 900  # keep q the same
     x2 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q2, a, b, c, 0, x0)[1]
-    ax1.plot(t1, x2, 'green', label='Prediction when q = 900 (Homeowners')
+    ax1.plot(t1, x2, 'green', label='Prediction when q = 900 (Homeowners)')
 
     # Solve ODE prediction for scenario 3
     q3 = 1250  # extract at faster rate
