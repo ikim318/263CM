@@ -141,7 +141,7 @@ def x_curve_fitting(t, a, b, c, x0):
     dt = t[1] - t[0]
 
     # read in time and dependent variable information
-    [t, q, x_exact] = load_data()[0],load_data()[1],load_data()[2]
+    [t, q, x_exact] = load_data()[0], load_data()[1], load_data()[2]
 
     # initialise x
     x = [x_exact[0]]
@@ -238,7 +238,7 @@ def plot_suitable():
     fig, (ax1, ax2) = plt.subplots(2, 1)
 
     # read in time and pressure data
-    [t,x_exact] = load_data()[0], load_data()[2]
+    [t, x_exact] = load_data()[0], load_data()[2]
     # TYPE IN YOUR PARAMETER ESTIMATE FOR a AND b HERE
     a = 9.81 / (400000 * 0.2)
     b = (10 ** -14 * 1000 * 400000) / (8.9 * 10 ** -8 * 400) * a
@@ -510,7 +510,7 @@ def plot_x_uncertainty():
 
     # Create forecast time with 400 new time steps
     t1 = []
-    for i in range(30):
+    for i in range(50):
         t1.append(i + t_end)
 
     # Set initial and ambient values for forecast
@@ -532,9 +532,9 @@ def plot_x_uncertainty():
     ax1.plot(t1, x3, 'blue', label='Prediction when q = 1250 (Geothermal Company)')
 
     # Solve ODE prediction for scenario 4 (Medium)
-    q4 = 800
-    x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, b, c, 0, x0)[1]
-    ax1.plot(t1, x4, 'red', label='Prediction when q = 800 (Medium)')
+    # q4 = 800
+    # x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, b, c, 0, x0)[1]
+    # ax1.plot(t1, x4, 'red', label='Prediction when q = 800 (Medium)')
 
     # Variance
     # var = 0.000961
@@ -545,7 +545,6 @@ def plot_x_uncertainty():
 
     # initialise list to count parameters for histograms
     b_list = []
-
     # loop to plot the different predictions with uncertainty
     for i in range(0, 499):  # 500 samples are 0 to 499
         # frequency distribution for histograms for parameters
@@ -570,9 +569,17 @@ def plot_x_uncertainty():
         x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, samples[i], c, 0, x0)[1]
         ax1.plot(t1, x3, 'blue', alpha=0.1, lw=0.5)
 
-        q4 = 800
-        x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, samples[i], c, 0, x0)[1]
-        ax1.plot(t1, x4, 'red', alpha=0.1, lw=0.5)
+        # q4 = 800
+        # x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, samples[i], c, 0, x0)[1]
+        # ax1.plot(t1, x4, 'red', alpha=0.1, lw=0.5)
+
+        q5 = 400
+        x5 = solve_ode_prediction(ode_model, t1[0], t1[(len(t1) // 2)], t1[1] - t1[0], xi, q5, a, samples[i], c, 0, x0)[1]
+        ax1.plot(t1[0:(len(t1) // 2 + 1)], x5, 'orange', alpha=0.1, lw=0.5)
+
+        q6 = 900
+        x6 = solve_ode_prediction(ode_model, t1[len(t1) // 2], t1[-1], t1[1] - t1[0], x5[-1], q6, a, samples[i], c, 0,x0)[1]
+        ax1.plot(t1[len(t1) // 2:], x6, 'orange', alpha=0.1, lw=0.5)
 
     ax1.set_title('Pressure')
     ax1.set_ylabel('Pressure (Bar)')
@@ -594,6 +601,7 @@ def plot_x_uncertainty():
     plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
     plt.show()
 
+
 def calculate_variance():
     data_points = np.random.uniform(0.1, 0.3, 100)
 
@@ -611,4 +619,3 @@ def calculate_variance():
 
     print(f"The variance of the dataset is: {variance}")
     return variance
-
