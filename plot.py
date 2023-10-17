@@ -518,27 +518,26 @@ def plot_x_uncertainty():
     # Solve ODE prediction for scenario 1 (Iwi)
     q1 = 700  # heat up again
     x1 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q1, a, b, c, 0, x0)[1]
-    ax1.plot(t1, x1, 'purple', label='Prediction when q = 700 (Iwi)')
+    ax1.plot(t1, x1, 'purple', label='Prediction when q = 700 (Rate desired by Iwi)')
 
     # Solve ODE prediction for scenario 2 (Homeowners)
     q2 = 900  # keep q the same
     x2 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q2, a, b, c, 0, x0)[1]
-    ax1.plot(t1, x2, 'green', label='Prediction when q = 900 (Homeowners)')
+    ax1.plot(t1, x2, 'green', label='Prediction when q = 900 (Rate desired by Homeowners)')
 
     # Solve ODE prediction for scenario 3 (Geothermal Company)
     q3 = 1250  # extract at faster rate
     x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, b, c, 0, x0)[1]
-    ax1.plot(t1, x3, 'blue', label='Prediction when q = 1250 (Geothermal Company)')
+    ax1.plot(t1, x3, 'blue', label='Prediction when q = 1250 (Rate desired by Geothermal Company)')
 
     # Solve ODE prediction for scenario 4 (Medium)
-    # q4 = 800
-    # x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, b, c, 0, x0)[1]
-    # ax1.plot(t1, x4, 'red', label='Prediction when q = 800 (Medium)')
+    q4 = 800
+    x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, b, c, 0, x0)[1]
+    ax1.plot(t1, x4, 'red', label='Prediction when q = 800 (Compromised Rate)')
 
     # Variance
     # var = 0.000961
     var = calculate_variance()
-    var = 0.007
 
     # using Normal function to generate 500 random samples from a Gaussian distribution
     samples = np.random.normal(b, var, 500)
@@ -553,6 +552,7 @@ def plot_x_uncertainty():
         spars = [a, samples[i], c, x0]
         x = x_curve_fitting(t, *spars)
         ax1.plot(t, x, 'black', alpha=0.1, lw=0.5)
+        xi = x[-1]
 
         # Solve ODE prediction for scenario 1
         q1 = 700  # heat up again
