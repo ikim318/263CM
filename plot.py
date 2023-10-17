@@ -141,10 +141,10 @@ def x_curve_fitting(t, a, b, c, x0):
     dt = t[1] - t[0]
 
     # read in time and dependent variable information
-    [t, q, x_exact] = load_data()[0], load_data()[1], load_data()[2]
+    [t,q,x_e] = np.genfromtxt("TotalDataSet.csv",delimiter=',',skip_header=1).T
 
     # initialise x
-    x = [x_exact[0]]
+    x = [x_e[0]]
 
     # using interpolation to find the injection rate at each point in time
     dqdt = find_dqdt(q)
@@ -417,57 +417,56 @@ def plot_x_forecast():
     none
     '''
 
-    # Read in time and dependent variable data
-    [t, x_exact] = [load_data()[0], load_data()[2]]
-    # dqdt = find_dqdt()
-    # GUESS PARAMETERS HERE
-    a = 9.81 / (16000000 * 0.2)
-    b = (10 ** -14 * 1000 * 16000000) / (8.9 * 10 ** -8 * 400) * a
-    c = 0.01
-    x0 = 40
-    pars_guess = [a, b, c, x0]
+    """
+       This function plots the uncertainty of the ODE model.
+       """
 
-    # Optimise parameters for model fit
-    pars, pars_cov = x_pars(pars_guess)
+    #   Guess Parameters
+    a = 0.001855863594537528
+    b = 0.09308619728884998
+    c = 0.006336076723279304
+    x0 = 53.77866150176843
+    pars = [a, b, c, x0]
+    [t, q, x] = np.genfromtxt("TotalDataSet.csv", delimiter=',', skip_header=1).T
+
+    # # Optimise parameters for model fit
+    # pars, pars_cov = x_pars(pars_guess)
 
     # Store optimal values for later use
+
     [a, b, c, x0] = pars
 
     # Solve ODE and plot model
-    x = x_curve_fitting(t, *pars)
-    f, ax1 = plt.subplots()
-    ax1.plot(t, x_exact, 'r.', label='data')
-    ax1.plot(t, x, 'black', label='Model')
+    x_e = x_curve_fitting(t, *pars)
+    figa, ax1 = plt.subplots()
+    ax1.plot(t, x, 'r.', label='data')
+    ax1.plot(t, x_e, 'black', label='Model')
 
     # Remember the last time
     t_end = t[-1]
 
-    # Create forecast time with 200 new time steps
+    # Create forecast time with 400 new time steps
     t1 = []
-    for i in range(22):
+    for i in range(50):
         t1.append(i + t_end)
 
     # Set initial and ambient values for forecast
-    xi = x[-1]  # Initial value of x is final value of model fit
+    xi = x_e[-1]  # Initial value of x is final value of model fit
 
-    # Solve ODE prediction for scenario 1
+    # Solve ODE prediction for scenario 1 (Iwi)
     q1 = 700  # heat up again
     x1 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q1, a, b, c, 0, x0)[1]
     ax1.plot(t1, x1, 'purple', label='Prediction when q = 700 (Iwi)')
 
-    # Solve ODE prediction for scenario 2
+    # Solve ODE prediction for scenario 2 (Homeowners)
     q2 = 900  # keep q the same
     x2 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q2, a, b, c, 0, x0)[1]
-    ax1.plot(t1, x2, 'green', label='Prediction when q = 900 (Homeowners')
+    ax1.plot(t1, x2, 'green', label='Prediction when q = 900 (Homeowners)')
 
-    # Solve ODE prediction for scenario 3
+    # Solve ODE prediction for scenario 3 (Geothermal Company)
     q3 = 1250  # extract at faster rate
     x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, b, c, 0, x0)[1]
     ax1.plot(t1, x3, 'blue', label='Prediction when q = 1250 (Geothermal Company)')
-
-    q4 = 800
-    x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, b, c, 0, x0)[1]
-    ax1.plot(t1, x4, 'red', label='Prediction when q = 800 (Medium)')
 
     # Axis information
     ax1.set_title('Pressure Forecast')
@@ -485,25 +484,25 @@ def plot_x_uncertainty():
     """
 
     #   Guess Parameters
-    a = 9.81 / (160000 * 0.2)
-    b = (10 ** -14 * 1000 * 160000) / (8.9 * 10 ** -8 * 400) * a
-    c = 0.01
-    x0 = 40
-    pars_guess = [a, b, c, x0]
-    [t, x_exact] = [load_data()[0], load_data()[2]]
+    a = 0.001855863594537528
+    b = 0.09308619728884998
+    c = 0.006336076723279304
+    x0 = 53.77866150176843
+    pars = [a, b, c, x0]
+    [t,q,x] = np.genfromtxt("TotalDataSet.csv",delimiter=',',skip_header=1).T
 
-    # Optimise parameters for model fit
-    pars, pars_cov = x_pars(pars_guess)
+    # # Optimise parameters for model fit
+    # pars, pars_cov = x_pars(pars_guess)
 
     # Store optimal values for later use
 
     [a, b, c, x0] = pars
 
     # Solve ODE and plot model
-    x = x_curve_fitting(t, *pars)
+    x_e = x_curve_fitting(t, *pars)
     figa, ax1 = plt.subplots()
-    ax1.plot(t, x_exact, 'r.', label='data')
-    ax1.plot(t, x, 'black', label='Model')
+    ax1.plot(t, x, 'r.', label='data')
+    ax1.plot(t, x_e, 'black', label='Model')
 
     # Remember the last time
     t_end = t[-1]
@@ -514,7 +513,7 @@ def plot_x_uncertainty():
         t1.append(i + t_end)
 
     # Set initial and ambient values for forecast
-    xi = x[-1]  # Initial value of x is final value of model fit
+    xi = x_e[-1]  # Initial value of x is final value of model fit
 
     # Solve ODE prediction for scenario 1 (Iwi)
     q1 = 700  # heat up again
@@ -539,6 +538,7 @@ def plot_x_uncertainty():
     # Variance
     # var = 0.000961
     var = calculate_variance()
+    var = 0.007
 
     # using Normal function to generate 500 random samples from a Gaussian distribution
     samples = np.random.normal(b, var, 500)
@@ -569,17 +569,18 @@ def plot_x_uncertainty():
         x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, samples[i], c, 0, x0)[1]
         ax1.plot(t1, x3, 'blue', alpha=0.1, lw=0.5)
 
-        # q4 = 800
-        # x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, samples[i], c, 0, x0)[1]
-        # ax1.plot(t1, x4, 'red', alpha=0.1, lw=0.5)
+        q4 = 800
+        x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, samples[i], c, 0, x0)[1]
+        ax1.plot(t1, x4, 'red', alpha=0.1, lw=0.5)
 
-        q5 = 400
-        x5 = solve_ode_prediction(ode_model, t1[0], t1[(len(t1) // 2)], t1[1] - t1[0], xi, q5, a, samples[i], c, 0, x0)[1]
-        ax1.plot(t1[0:(len(t1) // 2 + 1)], x5, 'orange', alpha=0.1, lw=0.5)
-
-        q6 = 900
-        x6 = solve_ode_prediction(ode_model, t1[len(t1) // 2], t1[-1], t1[1] - t1[0], x5[-1], q6, a, samples[i], c, 0,x0)[1]
-        ax1.plot(t1[len(t1) // 2:], x6, 'orange', alpha=0.1, lw=0.5)
+        # q5 = 400
+        # x5 = solve_ode_prediction(ode_model, t1[0], t1[2], t1[1] - t1[0], xi, q5, a, samples[i], c, 0, x0)[
+        #     1]
+        # ax1.plot(t1[:3], x5, 'orange', alpha=0.1, lw=0.5)
+        #
+        # q6 = 900
+        # x6 = solve_ode_prediction(ode_model, t1[2], t1[-1], t1[1] - t1[0], x5[-1], q6, a, samples[i], c, 0, x0)[1]
+        # ax1.plot(t1[2:], x6, 'orange', alpha=0.1, lw=0.5)
 
     ax1.set_title('Pressure')
     ax1.set_ylabel('Pressure (Bar)')
