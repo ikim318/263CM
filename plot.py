@@ -468,6 +468,10 @@ def plot_x_forecast():
     x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, b, c, 0, x0)[1]
     ax1.plot(t1, x3, 'blue', label='Prediction when q = 1250 (Geothermal Company)')
 
+    q4 = 800
+    x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, b, c, 0, x0)[1]
+    ax1.plot(t1, x4, 'red', label='Prediction when q = 800 (Compromised Rate)')
+
     # Axis information
     ax1.set_title('Pressure Forecast')
     ax1.set_ylabel('Pressure (Bar)')
