@@ -141,7 +141,7 @@ def x_curve_fitting(t, a, b, c, x0):
     dt = t[1] - t[0]
 
     # read in time and dependent variable information
-    [t,q,x_e] = np.genfromtxt("TotalDataSet.csv",delimiter=',',skip_header=1).T
+    [t, q, x_e] = np.genfromtxt("TotalDataSet.csv", delimiter=',', skip_header=1).T
 
     # initialise x
     x = [x_e[0]]
@@ -454,9 +454,9 @@ def plot_x_forecast():
     xi = x_e[-1]  # Initial value of x is final value of model fit
 
     # Solve ODE prediction for scenario 1 (Iwi)
-    q1 = 700  # heat up again
+    q1 = 500  # heat up again
     x1 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q1, a, b, c, 0, x0)[1]
-    ax1.plot(t1, x1, 'purple', label='Prediction when q = 700 (Iwi)')
+    ax1.plot(t1, x1, 'purple', label='Prediction when q = 500 (Iwi)')
 
     # Solve ODE prediction for scenario 2 (Homeowners)
     q2 = 900  # keep q the same
@@ -467,6 +467,10 @@ def plot_x_forecast():
     q3 = 1250  # extract at faster rate
     x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, b, c, 0, x0)[1]
     ax1.plot(t1, x3, 'blue', label='Prediction when q = 1250 (Geothermal Company)')
+
+    q4 = 800
+    x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, b, c, 0, x0)[1]
+    ax1.plot(t1, x4, 'red', label='Prediction when q = 800 (Compromised Rate)')
 
     # Axis information
     ax1.set_title('Pressure Forecast')
@@ -489,7 +493,7 @@ def plot_x_uncertainty():
     c = 0.006336076723279304
     x0 = 53.77866150176843
     pars = [a, b, c, x0]
-    [t,q,x] = np.genfromtxt("TotalDataSet.csv",delimiter=',',skip_header=1).T
+    [t, q, x] = np.genfromtxt("TotalDataSet.csv", delimiter=',', skip_header=1).T
 
     # # Optimise parameters for model fit
     # pars, pars_cov = x_pars(pars_guess)
@@ -516,9 +520,9 @@ def plot_x_uncertainty():
     xi = x_e[-1]  # Initial value of x is final value of model fit
 
     # Solve ODE prediction for scenario 1 (Iwi)
-    q1 = 700  # heat up again
+    q1 = 500  # heat up again
     x1 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q1, a, b, c, 0, x0)[1]
-    ax1.plot(t1, x1, 'purple', label='Prediction when q = 700 (Rate desired by Iwi)')
+    ax1.plot(t1, x1, 'purple', label='Prediction when q = 500 (Rate desired by Iwi)')
 
     # Solve ODE prediction for scenario 2 (Homeowners)
     q2 = 900  # keep q the same
@@ -536,11 +540,9 @@ def plot_x_uncertainty():
     ax1.plot(t1, x4, 'red', label='Prediction when q = 800 (Compromised Rate)')
 
     # Variance
-    # var = 0.000961
-    var = calculate_variance()
-
     # using Normal function to generate 500 random samples from a Gaussian distribution
-    samples = np.random.normal(b, var, 500)
+    std_dev = 0.0055
+    samples = np.random.normal(b, std_dev, 500)
 
     # initialise list to count parameters for histograms
     b_list = []
@@ -555,36 +557,27 @@ def plot_x_uncertainty():
         xi = x[-1]
 
         # Solve ODE prediction for scenario 1
-        q1 = 700  # heat up again
+        q1 = 500  # heat up again
         x1 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q1, a, samples[i], c, 0, x0)[1]
-        ax1.plot(t1, x1, 'purple', alpha=0.1, lw=0.5)
+        ax1.plot(t1, x1, 'purple', alpha=0.1, lw=0.3)
 
         # Solve ODE prediction for scenario 2
         q2 = 900  # keep q the same
         x2 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q2, a, samples[i], c, 0, x0)[1]
-        ax1.plot(t1, x2, 'green', alpha=0.1, lw=0.5)
+        ax1.plot(t1, x2, 'green', alpha=0.1, lw=0.3)
 
         # Solve ODE prediction for scenario 3
         q3 = 1250  # extract at faster rate
         x3 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q3, a, samples[i], c, 0, x0)[1]
-        ax1.plot(t1, x3, 'blue', alpha=0.1, lw=0.5)
+        ax1.plot(t1, x3, 'blue', alpha=0.1, lw=0.3)
 
         q4 = 800
         x4 = solve_ode_prediction(ode_model, t1[0], t1[-1], t1[1] - t1[0], xi, q4, a, samples[i], c, 0, x0)[1]
-        ax1.plot(t1, x4, 'red', alpha=0.1, lw=0.5)
+        ax1.plot(t1, x4, 'red', alpha=0.1, lw=0.3)
 
-        # q5 = 400
-        # x5 = solve_ode_prediction(ode_model, t1[0], t1[2], t1[1] - t1[0], xi, q5, a, samples[i], c, 0, x0)[
-        #     1]
-        # ax1.plot(t1[:3], x5, 'orange', alpha=0.1, lw=0.5)
-        #
-        # q6 = 900
-        # x6 = solve_ode_prediction(ode_model, t1[2], t1[-1], t1[1] - t1[0], x5[-1], q6, a, samples[i], c, 0, x0)[1]
-        # ax1.plot(t1[2:], x6, 'orange', alpha=0.1, lw=0.5)
-
-    ax1.set_title('Pressure')
+    ax1.set_title('Model Forecasts with Uncertainty')
     ax1.set_ylabel('Pressure (Bar)')
-    ax1.set_xlabel('Time Years')
+    ax1.set_xlabel('Time (Years)')
     ax1.legend()
 
     # plotting the histograms
@@ -617,6 +610,5 @@ def calculate_variance():
 
     # Step 4: Divide the sum by the total number of data points to get the variance
     variance = sum_squared_diff / len(data_points)
-
-    print(f"The variance of the dataset is: {variance}")
+    print(f"The StdDev of the dataset is: {variance}")
     return variance
